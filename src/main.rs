@@ -63,13 +63,9 @@ fn perform_camera_tracking<C: Component>(
     }
 }
 
-fn execute_animations(
-    time: Res<Time>,
-    mut query: Query<(&mut AnimationConfig, &mut TextureAtlas, &mut Transform)>,
-) {
+fn execute_animations(time: Res<Time>, mut query: Query<(&mut AnimationConfig, &mut TextureAtlas, &mut Transform)>) {
     for (mut config, mut atlas, mut transform) in &mut query {
-        config.frame_timer.tick(time.delta());
-
+        config.frame_timer.tick(time.delta()); // refresh rate
         if config.moving {
             match config.direction {
                 Direction::Up => { config.y += 150. * time.delta_seconds() }
@@ -86,22 +82,19 @@ fn execute_animations(
             transform.translation.x = config.x;
             transform.translation.y = config.y;
 
-            if config.frame_timer.just_finished() {
-                if atlas.index == config.last_sprite_index {
-                    atlas.index = config.first_sprite_index + 1;
-                } else {
+            if config.frame_timer.just_finished() { // after tick
+                if atlas.index == config.last_sprite_index { // on anim end
+                    atlas.index = config.first_sprite_index + 1; // skip still state
+                } else { // animate
                     atlas.index += 1;
                     config.frame_timer = AnimationConfig::timer_from_fps(config.fps);
                 }
             }
-        } else { atlas.index = config.first_sprite_index; }
+        } else { atlas.index = config.first_sprite_index; } // make still
     }
 }
 
-fn camera_tracking(
-    time: Res<Time>,
-    mut query: Query<(&mut PanOrbitConfig, &mut Transform)>,
-) {
+fn camera_tracking(time: Res<Time>, mut query: Query<(&mut PanOrbitConfig, &mut Transform)>) {
     for (mut config, mut transform) in &mut query {
         if config.moving {
             match config.direction {
@@ -121,36 +114,29 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let character_img = asset_server.load("textures/gabe-idle-run.png"); // load the sprite sheet using the `AssetServer`
-    let sensei_img = asset_server.load("textures/sensei.png"); // load the sprite sheet using the `AssetServer`
-    let tree_img_1 = asset_server.load("textures/generic-rpg-tree01.png"); // load the sprite sheet using the `AssetServer`
-    let tree_img_2 = asset_server.load("textures/generic-rpg-tree02.png"); // load the sprite sheet using the `AssetServer`
-    
-    // the sprite sheet has 7 sprites arranged in a row, and they are all 24px x 24px
-    let character_sprite_layout = TextureAtlasLayout::from_grid(UVec2::splat(24), 7, 1, None, None);
-    let character_layout = texture_atlas_layouts.add(character_sprite_layout);
-
-    let npc_sprite_layout = TextureAtlasLayout::from_grid(UVec2::splat(24), 1, 1, None, None);
-    let npc_layout = texture_atlas_layouts.add(npc_sprite_layout);
-
-    let tree_sprite_layout = TextureAtlasLayout::from_grid(UVec2::splat(74), 1, 1, None, None);
-    let tree_layout = texture_atlas_layouts.add(tree_sprite_layout);
-    
-    let animation_character = AnimationConfig::new(0, 6, 6); // the first sprite runs at 6 FPS
-    
-    // spawn random sprites
-    commands.spawn(( SpriteBundle { transform: Transform::from_xyz(100., 100., 0.), texture: tree_img_1.clone(), ..default() }, TextureAtlas { layout: tree_layout.clone(), index: 0 } ));
-    commands.spawn(( SpriteBundle { transform: Transform::from_xyz(-100., -100., 0.), texture: tree_img_2.clone(), ..default() }, TextureAtlas { layout: tree_layout.clone(), index: 0 } ));
-    commands.spawn(( SpriteBundle { transform: Transform::from_xyz(-80., -140., 0.), texture: sensei_img.clone(), ..default() }, TextureAtlas { layout: npc_layout.clone(), index: 0 } ));
-    
+    for (img, size, cols, x, y) in [ // list of assets
+        ("textures/generic-rpg-tree01.png", 74, 1, 100., 100.),
+        ("textures/generic-rpg-tree02.png", 74, 1, -100., -100.),
+        ("textures/sensei.png", 24, 1, -80., -140.)
+    ] { // generate
+        let img = asset_server.load(img);
+        let layout = texture_atlas_layouts.add(TextureAtlasLayout::from_grid(UVec2::splat(size), cols, 1, None, None));
+        commands.spawn(( SpriteBundle { transform: Transform::from_xyz(x, y, 0.), texture: img.clone(), ..default() }, TextureAtlas { layout: layout.clone(), index: 0 } ));
+    }
     // create the player sprite
+    let character_img = asset_server.load("textures/gabe-idle-run.png"); // load the sprite sheet using the `AssetServer`
+    let animation_character = AnimationConfig::new(0, 6, 6); // the first sprite runs at 6 FPS
+    let character_layout = texture_atlas_layouts.add(TextureAtlasLayout::from_grid(UVec2::splat(24), 7, 1, None, None));
     commands.spawn((
         SpriteBundle { transform: Transform::from_xyz(0., 0., 0.), texture: character_img.clone(), ..default() },
-        TextureAtlas { layout: character_layout.clone(), index: animation_character.first_sprite_index },
+        TextureAtlas {
+            layout: character_layout.clone(),
+            index: animation_character.first_sprite_index
+        },
         PlayerSprite,
         animation_character,
     ));
-
+    // init camera
     let camera = PanOrbitCameraBundle::default();
     commands.spawn(( camera, SceneCamera ));
 }
