@@ -2,11 +2,13 @@ use std::time::Duration;
 
 use bevy::input::keyboard::KeyboardInput;
 use bevy::input::ButtonState;
+use bevy::render::camera::ClearColor;
 use bevy::prelude::*;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest())) // prevents blurry sprites
+        .insert_resource(ClearColor(Color::srgb(0.427, 0.969, 0.694)))
         .add_systems(Startup, setup) // display sprite + txt
         .add_systems(Update, (
             execute_animations, // process
@@ -167,22 +169,32 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let texture = asset_server.load("textures/gabe-idle-run.png"); // load the sprite sheet using the `AssetServer`
+    let character_img = asset_server.load("textures/gabe-idle-run.png"); // load the sprite sheet using the `AssetServer`
+    let sensei_img = asset_server.load("textures/sensei.png"); // load the sprite sheet using the `AssetServer`
+    let tree_img_1 = asset_server.load("textures/generic-rpg-tree01.png"); // load the sprite sheet using the `AssetServer`
+    let tree_img_2 = asset_server.load("textures/generic-rpg-tree02.png"); // load the sprite sheet using the `AssetServer`
     
     // the sprite sheet has 7 sprites arranged in a row, and they are all 24px x 24px
-    let layout = TextureAtlasLayout::from_grid(UVec2::splat(24), 7, 1, None, None);
-    let texture_atlas_layout = texture_atlas_layouts.add(layout);
+    let character_sprite_layout = TextureAtlasLayout::from_grid(UVec2::splat(24), 7, 1, None, None);
+    let character_layout = texture_atlas_layouts.add(character_sprite_layout);
+
+    let npc_sprite_layout = TextureAtlasLayout::from_grid(UVec2::splat(24), 1, 1, None, None);
+    let npc_layout = texture_atlas_layouts.add(npc_sprite_layout);
+
+    let tree_sprite_layout = TextureAtlasLayout::from_grid(UVec2::splat(74), 1, 1, None, None);
+    let tree_layout = texture_atlas_layouts.add(tree_sprite_layout);
     
     let animation_character = AnimationConfig::new(0, 6, 6); // the first sprite runs at 6 FPS
     
     // spawn random sprites
-    commands.spawn(( SpriteBundle { transform: Transform::from_xyz(100., 100., 0.), texture: texture.clone(), ..default() }, TextureAtlas { layout: texture_atlas_layout.clone(), index: 0 } ));
-    commands.spawn(( SpriteBundle { transform: Transform::from_xyz(-100., -100., 0.), texture: texture.clone(), ..default() }, TextureAtlas { layout: texture_atlas_layout.clone(), index: 0 } ));
+    commands.spawn(( SpriteBundle { transform: Transform::from_xyz(100., 100., 0.), texture: tree_img_1.clone(), ..default() }, TextureAtlas { layout: tree_layout.clone(), index: 0 } ));
+    commands.spawn(( SpriteBundle { transform: Transform::from_xyz(-100., -100., 0.), texture: tree_img_2.clone(), ..default() }, TextureAtlas { layout: tree_layout.clone(), index: 0 } ));
+    commands.spawn(( SpriteBundle { transform: Transform::from_xyz(-80., -140., 0.), texture: sensei_img.clone(), ..default() }, TextureAtlas { layout: npc_layout.clone(), index: 0 } ));
     
     // create the player sprite
     commands.spawn((
-        SpriteBundle { transform: Transform::from_xyz(0., 0., 0.), texture: texture.clone(), ..default() },
-        TextureAtlas { layout: texture_atlas_layout.clone(), index: animation_character.first_sprite_index },
+        SpriteBundle { transform: Transform::from_xyz(0., 0., 0.), texture: character_img.clone(), ..default() },
+        TextureAtlas { layout: character_layout.clone(), index: animation_character.first_sprite_index },
         PlayerSprite,
         animation_character,
     ));
