@@ -4,7 +4,8 @@
 
 use std::time::Duration;
 
-use bevy::input::common_conditions::{input_just_pressed,input_just_released};
+use bevy::input::keyboard::KeyboardInput;
+use bevy::input::ButtonState;
 use bevy::prelude::*;
 
 fn main() {
@@ -12,40 +13,10 @@ fn main() {
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest())) // prevents blurry sprites
         .add_systems(Startup, setup) // display sprite + txt
         .add_systems(Update, execute_animations)
-        .add_systems(
-            Update,
-            (
-                start_animation::<PlayerSprite>.run_if(input_just_pressed(KeyCode::ArrowRight)),
-                start_animation::<PlayerSprite>.run_if(input_just_pressed(KeyCode::ArrowLeft)),
-                start_animation::<PlayerSprite>.run_if(input_just_pressed(KeyCode::ArrowUp)),
-                start_animation::<PlayerSprite>.run_if(input_just_pressed(KeyCode::ArrowDown)),
-                stop_animation::<PlayerSprite>.run_if(input_just_released(KeyCode::ArrowRight)),
-                stop_animation::<PlayerSprite>.run_if(input_just_released(KeyCode::ArrowLeft)),
-                stop_animation::<PlayerSprite>.run_if(input_just_released(KeyCode::ArrowUp)),
-                stop_animation::<PlayerSprite>.run_if(input_just_released(KeyCode::ArrowDown)),
-            ),
-        )
+        .add_systems(Update, handle_keypress::<PlayerSprite>)
         .run();
 }
 
-// This system runs when the user clicks the left arrow key or right arrow key
-fn start_animation<S: Component>(mut query: Query<&mut AnimationConfig, With<S>>) {
-    println!("{:?}", query);
-    // we expect the Component of type S to be used as a marker Component by only a single entity
-    let mut animation = query.single_mut();
-    // we create a new timer when the animation is triggered
-    animation.playing = true;
-    animation.frame_timer = AnimationConfig::timer_from_fps(animation.fps);
-}
-
-fn stop_animation<S: Component>(mut query: Query<&mut AnimationConfig, With<S>>) {
-    println!("{:?}", query);
-    // we expect the Component of type S to be used as a marker Component by only a single entity
-    let mut animation = query.single_mut();
-    // we create a new timer when the animation is triggered
-    animation.playing = false;
-    animation.frame_timer = AnimationConfig::timer_from_fps(1);
-}
 
 #[derive(Component)]
 struct AnimationConfig {
@@ -54,6 +25,43 @@ struct AnimationConfig {
     last_sprite_index: usize,
     fps: u8,
     frame_timer: Timer,
+    x: f32,
+    y: f32,
+    direction: Direction,
+}
+
+#[derive(Component)]
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right
+}
+
+fn handle_keypress<S: Component>(
+    mut evr_kbd: EventReader<KeyboardInput>,
+    mut query: Query<&mut AnimationConfig, With<S>>
+) {
+    let mut sprite = query.single_mut();
+    for ev in evr_kbd.read() {
+        match ev.state {
+            ButtonState::Pressed => {
+                println!("Key press: {:?} ({:?})", ev.key_code, ev.logical_key);
+                sprite.playing = true;
+                match ev.key_code {
+                    KeyCode::ArrowUp => { sprite.direction = Direction::Up }
+                    KeyCode::ArrowDown => { sprite.direction = Direction::Down }
+                    KeyCode::ArrowLeft => { sprite.direction = Direction::Left }
+                    KeyCode::ArrowRight => { sprite.direction = Direction::Right }
+                    _ => {}
+                }
+            }
+            ButtonState::Released => {
+                println!("Key release: {:?} ({:?})", ev.key_code, ev.logical_key);
+                sprite.playing = false;
+            }
+        }
+    }
 }
 
 impl AnimationConfig {
@@ -64,6 +72,9 @@ impl AnimationConfig {
             last_sprite_index: last,
             fps,
             frame_timer: Self::timer_from_fps(fps),
+            x: 0.,
+            y: 0.,
+            direction: Direction::Right
         }
     }
 
@@ -76,9 +87,9 @@ impl AnimationConfig {
 // `last_sprite_index` (both defined in `AnimationConfig`).
 fn execute_animations(
     time: Res<Time>,
-    mut query: Query<(&mut AnimationConfig, &mut TextureAtlas)>,
+    mut query: Query<(&mut AnimationConfig, &mut TextureAtlas, &mut Transform)>,
 ) {
-    for (mut config, mut atlas) in &mut query {
+    for (mut config, mut atlas, mut transform) in &mut query {
         // we track how long the current sprite has been displayed for
         config.frame_timer.tick(time.delta());
 
@@ -91,6 +102,14 @@ fn execute_animations(
                 } else {
                     // ...and it is NOT the last frame, then we move to the next frame...
                     atlas.index += 1;
+                    match config.direction {
+                        Direction::Up => { config.y += 1000. * time.delta_seconds(); }
+                        Direction::Down => { config.y -= 1000. * time.delta_seconds(); }
+                        Direction::Left => { config.x -= 1000. * time.delta_seconds(); }
+                        Direction::Right => { config.x += 1000. * time.delta_seconds(); }
+                    }
+                    transform.translation.x = config.x;
+                    transform.translation.y = config.y;
                     // ...and reset the frame timer to start counting all over again
                     config.frame_timer = AnimationConfig::timer_from_fps(config.fps);
                 }
@@ -122,8 +141,7 @@ fn setup(
     // create the first sprite
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_scale(Vec3::splat(6.0))
-                .with_translation(Vec3::new(-50.0, 0.0, 0.0)),
+            transform: Transform::from_xyz(0., 0., 0.),
             texture: texture.clone(),
             ..default()
         },
