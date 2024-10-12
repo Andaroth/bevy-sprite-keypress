@@ -1,9 +1,10 @@
-use std::time::Duration;
-
 use bevy::input::keyboard::KeyboardInput;
 use bevy::input::ButtonState;
 use bevy::render::camera::ClearColor;
 use bevy::prelude::*;
+
+mod structs;
+use structs::{AnimationConfig,Direction, PlayerSprite, SceneCamera, PanOrbitCameraBundle, PanOrbitConfig};
 
 fn main() {
     App::new()
@@ -29,19 +30,10 @@ fn handle_character_move<S: Component>(
             ButtonState::Pressed => {
                 sprite.moving = true;
                 match ev.key_code {
-                    KeyCode::ArrowUp => { sprite.direction = Direction::Up },
-                    KeyCode::KeyZ => { sprite.direction = Direction::Up },
-                    KeyCode::KeyW => { sprite.direction = Direction::Up },
-
-                    KeyCode::ArrowDown => { sprite.direction = Direction::Down },
-                    KeyCode::KeyS => { sprite.direction = Direction::Down },
-
-                    KeyCode::ArrowLeft => { sprite.direction = Direction::Left },
-                    KeyCode::KeyQ => { sprite.direction = Direction::Left },
-                    KeyCode::KeyA => { sprite.direction = Direction::Left },
-
-                    KeyCode::ArrowRight => { sprite.direction = Direction::Right },
-                    KeyCode::KeyD => { sprite.direction = Direction::Right },
+                    KeyCode::ArrowUp | KeyCode::KeyZ | KeyCode::KeyW => { sprite.direction = Direction::Up },
+                    KeyCode::ArrowDown | KeyCode::KeyS => { sprite.direction = Direction::Down },
+                    KeyCode::ArrowLeft | KeyCode::KeyQ | KeyCode::KeyA => { sprite.direction = Direction::Left },
+                    KeyCode::ArrowRight | KeyCode::KeyD => { sprite.direction = Direction::Right },
                     _ => { sprite.moving = false; }
                 }
             }
@@ -59,19 +51,10 @@ fn perform_camera_tracking<C: Component>(
             ButtonState::Pressed => {
                 camera.moving = true;
                 match ev.key_code {
-                    KeyCode::ArrowUp => { camera.direction = Direction::Up },
-                    KeyCode::KeyZ => { camera.direction = Direction::Up },
-                    KeyCode::KeyW => { camera.direction = Direction::Up },
-
-                    KeyCode::ArrowDown => { camera.direction = Direction::Down },
-                    KeyCode::KeyS => { camera.direction = Direction::Down },
-
-                    KeyCode::ArrowLeft => { camera.direction = Direction::Left },
-                    KeyCode::KeyQ => { camera.direction = Direction::Left },
-                    KeyCode::KeyA => { camera.direction = Direction::Left },
-
-                    KeyCode::ArrowRight => { camera.direction = Direction::Right },
-                    KeyCode::KeyD => { camera.direction = Direction::Right },
+                    KeyCode::ArrowUp | KeyCode::KeyZ | KeyCode::KeyW => { camera.direction = Direction::Up },
+                    KeyCode::ArrowDown | KeyCode::KeyS => { camera.direction = Direction::Down },
+                    KeyCode::ArrowLeft | KeyCode::KeyQ | KeyCode::KeyA => { camera.direction = Direction::Left },
+                    KeyCode::ArrowRight | KeyCode::KeyD => { camera.direction = Direction::Right },
                     _ => { camera.moving = false; }
                 }
             }
@@ -129,63 +112,6 @@ fn camera_tracking(
             }
             transform.translation.x = config.x;
             transform.translation.y = config.y;
-        }
-    }
-}
-
-#[derive(Component)]
-struct AnimationConfig {
-    moving: bool,
-    first_sprite_index: usize,
-    last_sprite_index: usize,
-    fps: u8,
-    frame_timer: Timer,
-    x: f32, y: f32,
-    direction: Direction,
-}
-
-#[derive(Component)]
-enum Direction { Up, Down, Left, Right }
-
-impl AnimationConfig {
-    fn new(first: usize, last: usize, fps: u8) -> Self {
-        Self {
-            moving: false,
-            first_sprite_index: first,
-            last_sprite_index: last,
-            fps,
-            frame_timer: Self::timer_from_fps(fps),
-            x: 0., y: 0.,
-            direction: Direction::Right
-        }
-    }
-    fn timer_from_fps(fps: u8) -> Timer { Timer::new(Duration::from_secs_f32(1.0 / (fps as f32)), TimerMode::Repeating) }
-}
-
-#[derive(Component)]
-struct PlayerSprite;
-
-#[derive(Component)]
-struct SceneCamera;
-
-// Bundle to spawn our custom camera easily
-#[derive(Bundle, Default)]
-struct PanOrbitCameraBundle { camera: Camera2dBundle, config: PanOrbitConfig }
-
-// The internal state of the pan-orbit controller
-#[derive(Component)]
-struct PanOrbitConfig {
-    moving: bool,
-    x: f32, y: f32,
-    direction: Direction
-}
-
-impl Default for PanOrbitConfig {
-    fn default() -> Self {
-        PanOrbitConfig {
-            moving: false,
-            x: 0., y: 0.,
-            direction: Direction::Right
         }
     }
 }
