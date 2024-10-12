@@ -13,17 +13,17 @@ fn main() {
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest())) // prevents blurry sprites
         .add_systems(Startup, setup) // display sprite + txt
         .add_systems(Update, (
-            execute_animations,
-            camera_tracking,
-            handle_character_move::<PlayerSprite>,
-            perform_camera_tracking::<SceneCamera>,
+            execute_animations, // process
+            camera_tracking, // process
+            handle_character_move::<PlayerSprite>, // player move on keypress
+            perform_camera_tracking::<SceneCamera>, // camera follows keypress
         ))
         .run();
 }
 
 fn handle_character_move<S: Component>(
-    mut evr_kbd: EventReader<KeyboardInput>,
-    mut query: Query<&mut AnimationConfig, With<S>>
+    mut evr_kbd: EventReader<KeyboardInput>, // bind to keyboard input event
+    mut query: Query<&mut AnimationConfig, With<S>> // bind to character
 ) {
     let mut sprite = query.single_mut();
     for ev in evr_kbd.read() {
@@ -42,8 +42,8 @@ fn handle_character_move<S: Component>(
     }
 }
 fn perform_camera_tracking<C: Component>(
-    mut evr_kbd: EventReader<KeyboardInput>,
-    mut query: Query<&mut PanOrbitConfig, With<C>>
+    mut evr_kbd: EventReader<KeyboardInput>, // bind to keyboard input event
+    mut query: Query<&mut PanOrbitConfig, With<C>> // bind to camera
 ) {
     let mut camera = query.single_mut();
     for ev in evr_kbd.read() {
@@ -86,7 +86,7 @@ fn execute_animations(
             if config.frame_timer.just_finished() {
                 if atlas.index == config.last_sprite_index {
                     // ...and it IS the last frame, then we move back to the first frame and stop.
-                    atlas.index = config.first_sprite_index;
+                    atlas.index = config.first_sprite_index + 1;
                 } else {
                     // ...and it is NOT the last frame, then we move to the next frame...
                     atlas.index += 1;
@@ -94,7 +94,7 @@ fn execute_animations(
                     config.frame_timer = AnimationConfig::timer_from_fps(config.fps);
                 }
             }
-        }
+        } else { atlas.index = config.first_sprite_index; }
     }
 }
 
@@ -210,7 +210,7 @@ fn setup(
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
     
     // the first sprite runs at 10 FPS
-    let animation_character = AnimationConfig::new(1, 6, 24);
+    let animation_character = AnimationConfig::new(0, 6, 6);
     
     // spawn random sprites
     commands.spawn(( SpriteBundle { transform: Transform::from_xyz(100., 100., 0.), texture: texture.clone(), ..default() }, TextureAtlas { layout: texture_atlas_layout.clone(), index: 0 } ));
