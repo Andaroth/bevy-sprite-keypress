@@ -112,10 +112,10 @@ fn execute_animations(
                     // ...and it is NOT the last frame, then we move to the next frame...
                     atlas.index += 1;
                     match config.direction {
-                        Direction::Up => { config.y += 20. }
-                        Direction::Down => { config.y -= 20. }
-                        Direction::Left => { config.x -= 20. }
-                        Direction::Right => { config.x += 20. }
+                        Direction::Up => { config.y += 500. * time.delta_seconds() }
+                        Direction::Down => { config.y -= 500. * time.delta_seconds() }
+                        Direction::Left => { config.x -= 500. * time.delta_seconds() }
+                        Direction::Right => { config.x += 500. * time.delta_seconds() }
                     }
                     transform.translation.x = config.x;
                     transform.translation.y = config.y;
