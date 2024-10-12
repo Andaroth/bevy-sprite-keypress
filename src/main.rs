@@ -50,9 +50,18 @@ fn handle_keypress<S: Component>(
                 sprite.playing = true;
                 match ev.key_code {
                     KeyCode::ArrowUp => { sprite.direction = Direction::Up }
+                    KeyCode::KeyZ => { sprite.direction = Direction::Up }
+                    KeyCode::KeyW => { sprite.direction = Direction::Up }
+
                     KeyCode::ArrowDown => { sprite.direction = Direction::Down }
+                    KeyCode::KeyS => { sprite.direction = Direction::Down }
+
                     KeyCode::ArrowLeft => { sprite.direction = Direction::Left }
+                    KeyCode::KeyQ => { sprite.direction = Direction::Left }
+                    KeyCode::KeyA => { sprite.direction = Direction::Left }
+
                     KeyCode::ArrowRight => { sprite.direction = Direction::Right }
+                    KeyCode::KeyD => { sprite.direction = Direction::Right }
                     _ => {}
                 }
             }
@@ -103,10 +112,10 @@ fn execute_animations(
                     // ...and it is NOT the last frame, then we move to the next frame...
                     atlas.index += 1;
                     match config.direction {
-                        Direction::Up => { config.y += 1000. * time.delta_seconds(); }
-                        Direction::Down => { config.y -= 1000. * time.delta_seconds(); }
-                        Direction::Left => { config.x -= 1000. * time.delta_seconds(); }
-                        Direction::Right => { config.x += 1000. * time.delta_seconds(); }
+                        Direction::Up => { config.y += 20. }
+                        Direction::Down => { config.y -= 20. }
+                        Direction::Left => { config.x -= 20. }
+                        Direction::Right => { config.x += 20. }
                     }
                     transform.translation.x = config.x;
                     transform.translation.y = config.y;
