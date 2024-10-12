@@ -1,7 +1,3 @@
-//! Animates a sprite in response to a keyboard event.
-//!
-//! See `sprite_sheet.rs` for an example where the sprite animation loops indefinitely.
-
 use std::time::Duration;
 
 use bevy::input::keyboard::KeyboardInput;
@@ -62,18 +58,14 @@ fn perform_camera_tracking<C: Component>(
     }
 }
 
-// This system loops through all the sprites in the `TextureAtlas`, from  `first_sprite_index` to
-// `last_sprite_index` (both defined in `AnimationConfig`).
 fn execute_animations(
     time: Res<Time>,
     mut query: Query<(&mut AnimationConfig, &mut TextureAtlas, &mut Transform)>,
 ) {
     for (mut config, mut atlas, mut transform) in &mut query {
-        // we track how long the current sprite has been displayed for
         config.frame_timer.tick(time.delta());
 
         if config.moving {
-            // If it has been displayed for the user-defined amount of time (fps)...
             match config.direction {
                 Direction::Up => { config.y += 150. * time.delta_seconds() }
                 Direction::Down => { config.y -= 150. * time.delta_seconds() }
@@ -85,12 +77,9 @@ fn execute_animations(
 
             if config.frame_timer.just_finished() {
                 if atlas.index == config.last_sprite_index {
-                    // ...and it IS the last frame, then we move back to the first frame and stop.
                     atlas.index = config.first_sprite_index + 1;
                 } else {
-                    // ...and it is NOT the last frame, then we move to the next frame...
                     atlas.index += 1;
-                    // ...and reset the frame timer to start counting all over again
                     config.frame_timer = AnimationConfig::timer_from_fps(config.fps);
                 }
             }
@@ -123,18 +112,12 @@ struct AnimationConfig {
     last_sprite_index: usize,
     fps: u8,
     frame_timer: Timer,
-    x: f32,
-    y: f32,
+    x: f32, y: f32,
     direction: Direction,
 }
 
 #[derive(Component)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right
-}
+enum Direction { Up, Down, Left, Right }
 
 impl AnimationConfig {
     fn new(first: usize, last: usize, fps: u8) -> Self {
@@ -144,15 +127,11 @@ impl AnimationConfig {
             last_sprite_index: last,
             fps,
             frame_timer: Self::timer_from_fps(fps),
-            x: 0.,
-            y: 0.,
+            x: 0., y: 0.,
             direction: Direction::Right
         }
     }
-
-    fn timer_from_fps(fps: u8) -> Timer {
-        Timer::new(Duration::from_secs_f32(1.0 / (fps as f32)), TimerMode::Repeating)
-    }
+    fn timer_from_fps(fps: u8) -> Timer { Timer::new(Duration::from_secs_f32(1.0 / (fps as f32)), TimerMode::Repeating) }
 }
 
 #[derive(Component)]
@@ -163,17 +142,13 @@ struct SceneCamera;
 
 // Bundle to spawn our custom camera easily
 #[derive(Bundle, Default)]
-struct PanOrbitCameraBundle {
-    camera: Camera2dBundle,
-    config: PanOrbitConfig,
-}
+struct PanOrbitCameraBundle { camera: Camera2dBundle, config: PanOrbitConfig }
 
 // The internal state of the pan-orbit controller
 #[derive(Component)]
 struct PanOrbitConfig {
     moving: bool,
-    x: f32,
-    y: f32,
+    x: f32, y: f32,
     direction: Direction
 }
 
@@ -181,19 +156,10 @@ impl Default for PanOrbitConfig {
     fn default() -> Self {
         PanOrbitConfig {
             moving: false,
-            x: 0.,
-            y: 0.,
+            x: 0., y: 0.,
             direction: Direction::Right
         }
     }
-}
-
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum PanOrbitAction {
-    Pan,
-    Orbit,
-    Zoom,
 }
 
 fn setup(
@@ -201,16 +167,13 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    
-    // load the sprite sheet using the `AssetServer`
-    let texture = asset_server.load("textures/gabe-idle-run.png");
+    let texture = asset_server.load("textures/gabe-idle-run.png"); // load the sprite sheet using the `AssetServer`
     
     // the sprite sheet has 7 sprites arranged in a row, and they are all 24px x 24px
     let layout = TextureAtlasLayout::from_grid(UVec2::splat(24), 7, 1, None, None);
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
     
-    // the first sprite runs at 10 FPS
-    let animation_character = AnimationConfig::new(0, 6, 6);
+    let animation_character = AnimationConfig::new(0, 6, 6); // the first sprite runs at 6 FPS
     
     // spawn random sprites
     commands.spawn(( SpriteBundle { transform: Transform::from_xyz(100., 100., 0.), texture: texture.clone(), ..default() }, TextureAtlas { layout: texture_atlas_layout.clone(), index: 0 } ));
@@ -218,22 +181,12 @@ fn setup(
     
     // create the player sprite
     commands.spawn((
-        SpriteBundle {
-            transform: Transform::from_xyz(0., 0., 0.),
-            texture: texture.clone(),
-            ..default()
-        },
-        TextureAtlas {
-            layout: texture_atlas_layout.clone(),
-            index: animation_character.first_sprite_index,
-        },
+        SpriteBundle { transform: Transform::from_xyz(0., 0., 0.), texture: texture.clone(), ..default() },
+        TextureAtlas { layout: texture_atlas_layout.clone(), index: animation_character.first_sprite_index },
         PlayerSprite,
         animation_character,
     ));
 
     let camera = PanOrbitCameraBundle::default();
-    commands.spawn((
-        camera,
-        SceneCamera
-    ));
+    commands.spawn(( camera, SceneCamera ));
 }
