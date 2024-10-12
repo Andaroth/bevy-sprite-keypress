@@ -41,8 +41,8 @@ pub struct SceneCamera;
 // Bundle to spawn our custom camera easily
 #[derive(Bundle, Default)]
 pub struct PanOrbitCameraBundle {
-  pub camera: Camera2dBundle,
-  pub config: PanOrbitConfig 
+    pub camera: Camera2dBundle,
+    pub config: PanOrbitConfig 
 }
 
 // The internal state of the pan-orbit controller
