@@ -17,7 +17,6 @@ fn main() {
         .run();
 }
 
-
 #[derive(Component)]
 struct AnimationConfig {
     playing: bool,
@@ -112,10 +111,10 @@ fn execute_animations(
                     // ...and it is NOT the last frame, then we move to the next frame...
                     atlas.index += 1;
                     match config.direction {
-                        Direction::Up => { config.y += 500. * time.delta_seconds() }
-                        Direction::Down => { config.y -= 500. * time.delta_seconds() }
-                        Direction::Left => { config.x -= 500. * time.delta_seconds() }
-                        Direction::Right => { config.x += 500. * time.delta_seconds() }
+                        Direction::Up => { config.y += 5. * 150. * time.delta_seconds() }
+                        Direction::Down => { config.y -= 5. * 150. * time.delta_seconds() }
+                        Direction::Left => { config.x -= 5. * 150. * time.delta_seconds() }
+                        Direction::Right => { config.x += 5. * 150. * time.delta_seconds() }
                     }
                     transform.translation.x = config.x;
                     transform.translation.y = config.y;
@@ -145,9 +144,13 @@ fn setup(
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
     // the first sprite runs at 10 FPS
-    let animation_config_1 = AnimationConfig::new(1, 6, 10);
+    let animation_config_1 = AnimationConfig::new(1, 6, 24);
 
-    // create the first sprite
+    // spawn random sprites
+    commands.spawn(( SpriteBundle { transform: Transform::from_xyz(100., 100., 0.), texture: texture.clone(), ..default() }, TextureAtlas { layout: texture_atlas_layout.clone(), index: 0 } ));
+    commands.spawn(( SpriteBundle { transform: Transform::from_xyz(-100., -100., 0.), texture: texture.clone(), ..default() }, TextureAtlas { layout: texture_atlas_layout.clone(), index: 0 } ));
+
+    // create the player sprite
     commands.spawn((
         SpriteBundle {
             transform: Transform::from_xyz(0., 0., 0.),
