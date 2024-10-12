@@ -27,12 +27,22 @@ fn handle_character_move<S: Component>(
     for ev in evr_kbd.read() {
         match ev.state {
             ButtonState::Pressed => {
+                sprite.moving = true;
                 match ev.key_code {
-                    KeyCode::ArrowUp => { sprite.moving = true; sprite.direction = Direction::Up }
-                    KeyCode::ArrowDown => { sprite.moving = true; sprite.direction = Direction::Down }
-                    KeyCode::ArrowLeft => { sprite.moving = true; sprite.direction = Direction::Left }
-                    KeyCode::ArrowRight => { sprite.moving = true; sprite.direction = Direction::Right }
-                    _ => {}
+                    KeyCode::ArrowUp => { sprite.direction = Direction::Up },
+                    KeyCode::KeyZ => { sprite.direction = Direction::Up },
+                    KeyCode::KeyW => { sprite.direction = Direction::Up },
+
+                    KeyCode::ArrowDown => { sprite.direction = Direction::Down },
+                    KeyCode::KeyS => { sprite.direction = Direction::Down },
+
+                    KeyCode::ArrowLeft => { sprite.direction = Direction::Left },
+                    KeyCode::KeyQ => { sprite.direction = Direction::Left },
+                    KeyCode::KeyA => { sprite.direction = Direction::Left },
+
+                    KeyCode::ArrowRight => { sprite.direction = Direction::Right },
+                    KeyCode::KeyD => { sprite.direction = Direction::Right },
+                    _ => { sprite.moving = false; }
                 }
             }
             ButtonState::Released => { sprite.moving = false; }
@@ -47,12 +57,22 @@ fn perform_camera_tracking<C: Component>(
     for ev in evr_kbd.read() {
         match ev.state {
             ButtonState::Pressed => {
+                camera.moving = true;
                 match ev.key_code {
-                    KeyCode::ArrowUp => { camera.moving = true; camera.direction = Direction::Up }
-                    KeyCode::ArrowDown => { camera.moving = true; camera.direction = Direction::Down }
-                    KeyCode::ArrowLeft => { camera.moving = true; camera.direction = Direction::Left }
-                    KeyCode::ArrowRight => { camera.moving = true; camera.direction = Direction::Right }
-                    _ => {}
+                    KeyCode::ArrowUp => { camera.direction = Direction::Up },
+                    KeyCode::KeyZ => { camera.direction = Direction::Up },
+                    KeyCode::KeyW => { camera.direction = Direction::Up },
+
+                    KeyCode::ArrowDown => { camera.direction = Direction::Down },
+                    KeyCode::KeyS => { camera.direction = Direction::Down },
+
+                    KeyCode::ArrowLeft => { camera.direction = Direction::Left },
+                    KeyCode::KeyQ => { camera.direction = Direction::Left },
+                    KeyCode::KeyA => { camera.direction = Direction::Left },
+
+                    KeyCode::ArrowRight => { camera.direction = Direction::Right },
+                    KeyCode::KeyD => { camera.direction = Direction::Right },
+                    _ => { camera.moving = false; }
                 }
             }
             ButtonState::Released => { camera.moving = false; }
@@ -71,8 +91,14 @@ fn execute_animations(
             match config.direction {
                 Direction::Up => { config.y += 150. * time.delta_seconds() }
                 Direction::Down => { config.y -= 150. * time.delta_seconds() }
-                Direction::Left => { config.x -= 150. * time.delta_seconds() }
-                Direction::Right => { config.x += 150. * time.delta_seconds() }
+                Direction::Left => {
+                    config.x -= 150. * time.delta_seconds();
+                    transform.scale.x = -1.;
+                }
+                Direction::Right => {
+                    config.x += 150. * time.delta_seconds();
+                    transform.scale.x = 1.;
+                }
             }
             transform.translation.x = config.x;
             transform.translation.y = config.y;
