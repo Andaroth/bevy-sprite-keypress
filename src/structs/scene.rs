@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use bevy::asset::{io::Reader, AssetLoader, LoadContext};
+use bevy::prelude::*;
 use bevy::reflect::TypePath;
 use serde::{Deserialize, Serialize};
 
@@ -15,14 +15,14 @@ pub struct SceneCamera;
 #[derive(Bundle, Default)]
 pub struct PanOrbitCameraBundle {
     pub camera: Camera2dBundle,
-    pub config: PanOrbitConfig 
+    pub config: PanOrbitConfig,
 }
 
 // The internal state of the pan-orbit controller
 #[derive(Component)]
 pub struct PanOrbitConfig {
     pub moving: bool,
-    pub x: f32, 
+    pub x: f32,
     pub y: f32,
     pub direction: BaseDirection,
     // pub locked: bool
@@ -32,7 +32,8 @@ impl Default for PanOrbitConfig {
     fn default() -> Self {
         PanOrbitConfig {
             moving: false,
-            x: 0., y: 0.,
+            x: 0.,
+            y: 0.,
             direction: BaseDirection::Right,
             // locked: false
         }
@@ -43,14 +44,14 @@ impl Default for PanOrbitConfig {
 pub struct GameDecoration {
     pub sprite: SpriteSet,
     pub x: f32,
-    pub y: f32
+    pub y: f32,
 }
 
 #[derive(Component, Serialize, Deserialize)]
 pub struct GameEvent {
     pub sprite: SpriteSet,
     pub x: f32,
-    pub y: f32
+    pub y: f32,
 }
 
 #[derive(Asset, Default, TypePath, Serialize, Deserialize)]
@@ -61,7 +62,7 @@ pub struct GameMap {
     pub comment: String,
     pub note: String,
     pub decorations: Vec<GameDecoration>,
-    pub common_events: Vec<GameEvent>
+    pub common_events: Vec<GameEvent>,
 }
 
 // impl AssetLoader for GameMap {
