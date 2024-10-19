@@ -1,0 +1,37 @@
+{
+  "id": 0,
+  "name": "Start",
+  "display_name": "Start",
+  "comment": "",
+  "note": "",
+  "decorations": [
+    {
+      "sprite": {
+        "set": "textures/generic-rpg-tree01.png", 
+        "size": 74,
+        "faces": 1
+      },
+      "x": 100.0, 
+      "y": 100.0
+    },
+    {
+      "sprite": {
+        "set": "textures/generic-rpg-tree02.png", 
+        "size": 74,
+        "faces": 1
+      },
+      "x": -100.0, 
+      "y": -100.0
+    },
+    {
+      "sprite": {
+        "set": "textures/sensei.png", 
+        "size": 24,
+        "faces": 1
+      },
+      "x": -80.0, 
+      "y": -140.0
+    }
+  ],
+  "common_events": []
+}
